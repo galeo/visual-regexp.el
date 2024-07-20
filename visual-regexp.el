@@ -607,7 +607,7 @@ visible all the time in the minibuffer."
                       looping
                       (condition-case err
                           (funcall (if vr/plain 'search-forward 're-search-forward) regexp-string vr--target-buffer-end t)
-                        ('invalid-regexp (progn (setq message-line (car (cdr err))) nil))))
+                        (invalid-regexp (progn (setq message-line (car (cdr err))) nil))))
                 (condition-case err
                     (progn
                       (if (or (not feedback) (not feedback-limit) (< i feedback-limit))
@@ -621,7 +621,7 @@ visible all the time in the minibuffer."
                             (forward-char) ;; don't get stuck on zero-width matches
                           (setq looping nil)))
                       (setq i (1+ i)))
-                  ('error (progn
+                  (error (progn
                             (setq message-line (vr--format-error err))
                             (setq replacements (list))
                             (setq looping nil))))))))
@@ -640,7 +640,7 @@ visible all the time in the minibuffer."
     ;; visual feedback for matches
     (condition-case err
         (mapc (lambda (replacement-info) (apply 'vr--do-replace-feedback-match-callback replacement-info)) replacements)
-      ('error (setq message-line (vr--format-error err))))
+      (error (setq message-line (vr--format-error err))))
     (unless (string= "" message-line)
       (vr--minibuffer-message message-line))))
 
@@ -698,7 +698,7 @@ visible all the time in the minibuffer."
            (history-add-new-input nil)
            (text-property-default-nonsticky
             (cons '(separator . t) text-property-default-nonsticky))
-           ;; seperator and query-replace-from-to-history copy/pasted from replace.el
+           ;; separator and query-replace-from-to-history copy/pasted from replace.el
            (separator
             (when vr/match-separator-string
               (propertize "\0"
