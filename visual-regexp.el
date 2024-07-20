@@ -187,6 +187,11 @@ If nil, don't limit the number of matches shown in visual feedback."
   :type 'integer
   :group 'visual-regexp)
 
+(defcustom vr/show-feedback-delay 0.25
+  "Seconds to wait before beginning to show visual feedback."
+  :type 'number
+  :group 'visual-regexp)
+
 (defcustom vr/default-replace-preview nil
   "Preview of replacement activated by default?
 If activated, the original is not shown alongside the replacement."
@@ -263,6 +268,9 @@ This is used for compatibility with Emacs 24.")
 (defvar vr--feedback-limit nil
   "Feedback limit currently in use.")
 
+(defvar vr--show-feedback-timer nil
+  "Show visual feedback timer.")
+
 (defvar vr--replace-preview nil
   "Preview of replacement activated?")
 
@@ -302,7 +310,8 @@ This is used for compatibility with Emacs 24.")
   (if vr--feedback-limit
       (setq vr--feedback-limit nil)
     (setq vr--feedback-limit vr/default-feedback-limit))
-  (vr--show-feedback))
+  (setq vr--show-feedback-timer
+        (run-with-idle-timer vr/show-feedback-delay nil #'vr--show-feedback)))
 
 (defun vr--get-regexp-string-full ()
   (if (equal vr--in-minibuffer 'vr--minibuffer-regexp)
@@ -444,6 +453,9 @@ visible all the time in the minibuffer."
 ;;; hooks
 
 (defun vr--show-feedback ()
+  (when vr--show-feedback-timer
+    (cancel-timer vr--show-feedback-timer)
+    (setq vr--show-feedback-timer nil))
   (if (vr--in-replace)
       (vr--do-replace-feedback)
     (vr--feedback)))
@@ -461,7 +473,8 @@ visible all the time in the minibuffer."
         ;; not using after-change-hook because this hook applies to the whole minibuffer, including minibuffer-messages
         ;; that disappear after a while.
         (vr--update-minibuffer-prompt)
-        (vr--show-feedback)))))
+        (setq vr--show-feedback-timer
+              (run-with-idle-timer vr/show-feedback-delay nil #'vr--show-feedback))))))
 
 (defun vr--minibuffer-setup ()
   "Setup prompt and help when entering minibuffer."
